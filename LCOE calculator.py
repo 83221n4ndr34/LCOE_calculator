@@ -103,12 +103,12 @@ def LCOE_calculator(capacity, lifetime, utilization_hours, construction_time, di
     FOM = Parameter(name = "Fixed Operation and Maintenance", unit_of_measurement = "$/MWh", value = round(FOM_costs * kW_MW / utilization_hours, 2))
 
     # Calculate VOM
-    VOM = Parameter(name = "Variable Operation and Maintenance", unit_of_measurement = "$/MWh", value = round(VOM_costs * kW_MW / (utilization_hours * 9), 2))
+    VOM = Parameter(name = "Variable Operation and Maintenance", unit_of_measurement = "$/MWh", value = round(VOM_costs * kW_MW / utilization_hours, 2))
 
     # Calculate FUEL
     FUEL = Parameter(name = "Fuel", unit_of_measurement = "$/MWh", value = round(fuel_cycle_costs * kW_MW / utilization_hours, 2))
 
-    # Calculate DECOMMISSIONING
+    # Calculate DECOMMISSIONING, interest of decommissioning fund is assumed to be 0.01 
     DECOMMISSIONING = Parameter(name = "Decommissioning", unit_of_measurement = "$/MWh", value = round(((overnight_costs * 0.15 * kW_MW * 0.01) / (math.pow(1.01, lifetime) - 1)) / utilization_hours, 2))
 
     # Calculate LCOE
@@ -158,7 +158,7 @@ class Parameter:
 # all @var are object of the Parameter class
 # has method for edit parameters, calculate LCOE, use default design or scenario/region/year
 class Reactor:
-    def __init__(self, capacity = Parameter(name = "Capacity", unit_of_measurement = "kW", value = int(1000)), lifetime = Parameter(name = "Lifetime", unit_of_measurement = "year", value = int(60)), 
+    def __init__(self, capacity = Parameter(name = "Capacity", unit_of_measurement = "MW", value = int(1000)), lifetime = Parameter(name = "Lifetime", unit_of_measurement = "year", value = int(60)), 
                  utilization_hours = Parameter(name = "Utilization Hours", unit_of_measurement = "h", value = int(7884)), construction_time = Parameter(name = "Construction Time", unit_of_measurement = "year", value = int(7)), 
                  discount_rate = Parameter(name = "Discout Rate ", unit_of_measurement = "", value = float(0.07)), escalation_rate = Parameter(name = "Escalation Rate ", unit_of_measurement = "", value = float(0.01)),
                  overnight_costs = Parameter(name = "Overnight Construction Costs", unit_of_measurement = "$/kW", value = int(4000)), fuel_cycle_costs = Parameter(name = "Fuel Cycle Costs", unit_of_measurement = "$/kW y", value = float(70)), 
@@ -177,6 +177,8 @@ class Reactor:
         # self.O_M_costs = copy.deepcopy(O_M_costs)
         self.list_value = [value for key, value in self.__dict__.items()]
         self.list_print = [value.print_value() for value in self.list_value] # parameters formatting for print the list
+        self.choose_CF_UH = 0
+        self.edit_total_O_M_done = False
   
     # @input if edit_all == True -> edit all parameters
     def edit_parameter(self, edit_all = False):
@@ -216,9 +218,11 @@ class Reactor:
                 print(f"FOM and VOM can be edited individually or you can provide the total costs of Operation and Maintenance and there will be an approximation of the breakdown (the approximation is godd for CF>=80%)")
                 parameter = int(input(f"\nDigit the associated number and press Enter: "))
                 if(parameter in [9,10]): # edit FOM, VOM or O_M
-                    edit_total = yes_no_input(input(f"Do you want to edit total Operation and Maintenance? [y/n]: "))
-                    if(edit_total):
-                        self.O_M_breakdown(O_M_costs = float(input(f"Digit the value for total Operation and Maintenance [$/kW y]: ")))
+                    if(not self.edit_total_O_M_done):
+                        edit_total = yes_no_input(input(f"Do you want to edit total Operation and Maintenance? [y/n]: "))
+                        self.edit_total_O_M_done = True
+                        if(edit_total):
+                            self.O_M_breakdown(O_M_costs = float(input(f"Digit the value for total Operation and Maintenance [$/kW y]: ")))
                     elif(parameter == 9):
                         self.FOM_costs.edit_value(float(input(f"Digit the value for Fix Operation and Maintainance costs [$/kW y]: ")))
                     elif(parameter == 10): 
@@ -244,11 +248,16 @@ class Reactor:
     # function dedicated to ask Capacity Factor or Utilization Hours
     # @return Utilization Hours
     def ask_CF_UH(self):
-        print(f"Do you want to enter Capacity Factor or Utilization Hours?: ")
-        print_list(["Capacity Factor","Utilization Hours"])
-        CF_UU = int(input(f"Digit the associated number and press Enter: "))
-        if(CF_UU == 1):
+        if(self.choose_CF_UH == 0): # do not ask every time and preserv user choice
+            print(f"Do you want to enter Capacity Factor or Utilization Hours?: ")
+            print_list(["Capacity Factor","Utilization Hours"])
+            self.choose_CF_UH = int(input(f"Digit the associated number and press Enter: "))
+        if(self.choose_CF_UH == 1):
             CF = float(input(f"Digit the value for Capacity Factor: "))
+            alert = (CF>1)
+            while(alert):
+                CF = float(input(f"Attention you entered a Capacity Factor > 1, please re-enter it correctly: "))
+                alert = (CF>1)
             utilization_hours = round(CF*365*24)
         else:
             utilization_hours = int(input(f"Digit the value for Utilization Hours: "))
@@ -413,179 +422,179 @@ class Reactor_Region_LCOE():
         if(self.scenario_name == "Net Zero by 2050"):
             if(self.year_name == "2021"):
                 if(self.region_name == "United States"):
-                    self.discount_rate=Parameter(name="Discount Rate ",unit_of_measurement="", value=0.08)
-                    self.capital_costs = Parameter(name = "Capital Costs", unit_of_measurement = "$/kW", value = 5000)
+                    self.discount_rate = Parameter(name="Discount Rate ",unit_of_measurement="", value=0.08)
+                    self.overnight_costs = Parameter(name = "Overnight Costs", unit_of_measurement = "$/kW", value = 5000)
                     self.capacity_factor = Parameter(name = "Capacity Factor", unit_of_measurement = "", value = 0.90)       
                     self.Fuel_O_M = Parameter(name = "Fuel and Operation and Maintainance Costs", unit_of_measurement = "$/MWh", value = 30)
                     self.LCOE = Parameter(name = "Levelized Cost Of Electricity", unit_of_measurement = "$/MWh", value = 100)
                 elif(self.region_name == "European Union"):
-                    self.discount_rate=Parameter(name="Discount Rate ",unit_of_measurement="", value=0.08)
-                    self.capital_costs = Parameter(name = "Capital Costs", unit_of_measurement = "$/kW", value = 6600)
+                    self.discount_rate = Parameter(name="Discount Rate ",unit_of_measurement="", value=0.08)
+                    self.overnight_costs = Parameter(name = "Overnight Costs", unit_of_measurement = "$/kW", value = 6600)
                     self.capacity_factor = Parameter(name = "Capacity Factor", unit_of_measurement = "", value = 0.80)       
                     self.Fuel_O_M = Parameter(name = "Fuel and Operation and Maintainance Costs", unit_of_measurement = "$/MWh", value = 35)
                     self.LCOE = Parameter(name = "Levelized Cost Of Electricity", unit_of_measurement = "$/MWh", value = 140)
                 elif(self.region_name == "China"):
-                    self.discount_rate=Parameter(name="Discount Rate ",unit_of_measurement="", value=0.07)
-                    self.capital_costs = Parameter(name = "Capital Costs", unit_of_measurement = "$/kW", value = 2800)
+                    self.discount_rate = Parameter(name="Discount Rate ",unit_of_measurement="", value=0.07)
+                    self.overnight_costs = Parameter(name = "Overnight Costs", unit_of_measurement = "$/kW", value = 2800)
                     self.capacity_factor = Parameter(name = "Capacity Factor", unit_of_measurement = "", value = 0.85)       
                     self.Fuel_O_M = Parameter(name = "Fuel and Operation and Maintainance Costs", unit_of_measurement = "$/MWh", value = 25)
                     self.LCOE = Parameter(name = "Levelized Cost Of Electricity", unit_of_measurement = "$/MWh", value = 65)
                 elif(self.region_name == "India"):
-                    self.discount_rate=Parameter(name="Discount Rate ",unit_of_measurement="", value=0.07)
-                    self.capital_costs = Parameter(name = "Capital Costs", unit_of_measurement = "$/kW", value = 2800)
+                    self.discount_rate = Parameter(name="Discount Rate ",unit_of_measurement="", value=0.07)
+                    self.overnight_costs = Parameter(name = "Overnight Costs", unit_of_measurement = "$/kW", value = 2800)
                     self.capacity_factor = Parameter(name = "Capacity Factor", unit_of_measurement = "", value = 0.70)       
                     self.Fuel_O_M = Parameter(name = "Fuel and Operation and Maintainance Costs", unit_of_measurement = "$/MWh", value = 30)
                     self.LCOE = Parameter(name = "Levelized Cost Of Electricity", unit_of_measurement = "$/MWh", value = 75)
             elif(self.year_name == "2030"):
                 if(self.region_name == "United States"):
-                    self.discount_rate=Parameter(name="Discount Rate ",unit_of_measurement="", value=0.08)
-                    self.capital_costs = Parameter(name = "Capital Costs", unit_of_measurement = "$/kW", value = 4800)
+                    self.discount_rate = Parameter(name="Discount Rate ",unit_of_measurement="", value=0.08)
+                    self.overnight_costs = Parameter(name = "Overnight Costs", unit_of_measurement = "$/kW", value = 4800)
                     self.capacity_factor = Parameter(name = "Capacity Factor", unit_of_measurement = "", value = 0.90)       
                     self.Fuel_O_M = Parameter(name = "Fuel and Operation and Maintainance Costs", unit_of_measurement = "$/MWh", value = 30)
                     self.LCOE = Parameter(name = "Levelized Cost Of Electricity", unit_of_measurement = "$/MWh", value = 100)
                 elif(self.region_name == "European Union"):
-                    self.discount_rate=Parameter(name="Discount Rate ",unit_of_measurement="", value=0.08)
-                    self.capital_costs = Parameter(name = "Capital Costs", unit_of_measurement = "$/kW", value = 5100)
+                    self.discount_rate = Parameter(name="Discount Rate ",unit_of_measurement="", value=0.08)
+                    self.overnight_costs = Parameter(name = "Overnight Costs", unit_of_measurement = "$/kW", value = 5100)
                     self.capacity_factor = Parameter(name = "Capacity Factor", unit_of_measurement = "", value = 0.80)       
                     self.Fuel_O_M = Parameter(name = "Fuel and Operation and Maintainance Costs", unit_of_measurement = "$/MWh", value = 35)
                     self.LCOE = Parameter(name = "Levelized Cost Of Electricity", unit_of_measurement = "$/MWh", value = 115)
                 elif(self.region_name == "China"):
-                    self.discount_rate=Parameter(name="Discount Rate ",unit_of_measurement="", value=0.07)
-                    self.capital_costs = Parameter(name = "Capital Costs", unit_of_measurement = "$/kW", value = 2800)
+                    self.discount_rate = Parameter(name="Discount Rate ",unit_of_measurement="", value=0.07)
+                    self.overnight_costs = Parameter(name = "Overnight Costs", unit_of_measurement = "$/kW", value = 2800)
                     self.capacity_factor = Parameter(name = "Capacity Factor", unit_of_measurement = "", value = 0.80)       
                     self.Fuel_O_M = Parameter(name = "Fuel and Operation and Maintainance Costs", unit_of_measurement = "$/MWh", value = 25)
                     self.LCOE = Parameter(name = "Levelized Cost Of Electricity", unit_of_measurement = "$/MWh", value = 65)
                 elif(self.region_name == "India"):
-                    self.discount_rate=Parameter(name="Discount Rate ",unit_of_measurement="", value=0.07)
-                    self.capital_costs = Parameter(name = "Capital Costs", unit_of_measurement = "$/kW", value = 2800)
+                    self.discount_rate = Parameter(name="Discount Rate ",unit_of_measurement="", value=0.07)
+                    self.overnight_costs = Parameter(name = "Overnight Costs", unit_of_measurement = "$/kW", value = 2800)
                     self.capacity_factor = Parameter(name = "Capacity Factor", unit_of_measurement = "", value = 0.85)       
                     self.Fuel_O_M = Parameter(name = "Fuel and Operation and Maintainance Costs", unit_of_measurement = "$/MWh", value = 30)
                     self.LCOE = Parameter(name = "Levelized Cost Of Electricity", unit_of_measurement = "$/MWh", value = 65)
             elif(self.year_name == "2050"):
                 if(self.region_name == "United States"):
-                    self.discount_rate=Parameter(name="Discount Rate ",unit_of_measurement="", value=0.08)
-                    self.capital_costs = Parameter(name = "Capital Costs", unit_of_measurement = "$/kW", value = 4500)
+                    self.discount_rate = Parameter(name="Discount Rate ",unit_of_measurement="", value=0.08)
+                    self.overnight_costs = Parameter(name = "Overnight Costs", unit_of_measurement = "$/kW", value = 4500)
                     self.capacity_factor = Parameter(name = "Capacity Factor", unit_of_measurement = "", value = 0.85)       
                     self.Fuel_O_M = Parameter(name = "Fuel and Operation and Maintainance Costs", unit_of_measurement = "$/MWh", value = 30)
                     self.LCOE = Parameter(name = "Levelized Cost Of Electricity", unit_of_measurement = "$/MWh", value = 100)
                 elif(self.region_name == "European Union"):
-                    self.discount_rate=Parameter(name="Discount Rate ",unit_of_measurement="", value=0.08)
-                    self.capital_costs = Parameter(name = "Capital Costs", unit_of_measurement = "$/kW", value = 4500)
+                    self.discount_rate = Parameter(name="Discount Rate ",unit_of_measurement="", value=0.08)
+                    self.overnight_costs = Parameter(name = "Overnight Costs", unit_of_measurement = "$/kW", value = 4500)
                     self.capacity_factor = Parameter(name = "Capacity Factor", unit_of_measurement = "", value = 0.70)       
                     self.Fuel_O_M = Parameter(name = "Fuel and Operation and Maintainance Costs", unit_of_measurement = "$/MWh", value = 35)
                     self.LCOE = Parameter(name = "Levelized Cost Of Electricity", unit_of_measurement = "$/MWh", value = 115)
                 elif(self.region_name == "China"):
-                    self.discount_rate=Parameter(name="Discount Rate ",unit_of_measurement="", value=0.07)
-                    self.capital_costs = Parameter(name = "Capital Costs", unit_of_measurement = "$/kW", value = 2500)
+                    self.discount_rate = Parameter(name="Discount Rate ",unit_of_measurement="", value=0.07)
+                    self.overnight_costs = Parameter(name = "Overnight Costs", unit_of_measurement = "$/kW", value = 2500)
                     self.capacity_factor = Parameter(name = "Capacity Factor", unit_of_measurement = "", value = 0.70)       
                     self.Fuel_O_M = Parameter(name = "Fuel and Operation and Maintainance Costs", unit_of_measurement = "$/MWh", value = 25)
                     self.LCOE = Parameter(name = "Levelized Cost Of Electricity", unit_of_measurement = "$/MWh", value = 65)
                 elif(self.region_name == "India"):
-                    self.discount_rate=Parameter(name="Discount Rate ",unit_of_measurement="", value=0.07)
-                    self.capital_costs = Parameter(name = "Capital Costs", unit_of_measurement = "$/kW", value = 2800)
+                    self.discount_rate = Parameter(name="Discount Rate ",unit_of_measurement="", value=0.07)
+                    self.overnight_costs = Parameter(name = "Overnight Costs", unit_of_measurement = "$/kW", value = 2800)
                     self.capacity_factor = Parameter(name = "Capacity Factor", unit_of_measurement = "", value = 0.90)       
                     self.Fuel_O_M = Parameter(name = "Fuel and Operation and Maintainance Costs", unit_of_measurement = "$/MWh", value = 30)
                     self.LCOE = Parameter(name = "Levelized Cost Of Electricity", unit_of_measurement = "$/MWh", value = 65)
         elif(self.scenario_name == "Announced Pledges"):
             if(self.year_name == "2021"):
                 if(self.region_name == "United States"):
-                    self.discount_rate=Parameter(name="Discount Rate ",unit_of_measurement="", value=0.08)
-                    self.capital_costs = Parameter(name = "Capital Costs", unit_of_measurement = "$/kW", value = 5000)
+                    self.discount_rate = Parameter(name="Discount Rate ",unit_of_measurement="", value=0.08)
+                    self.overnight_costs = Parameter(name = "Overnight Costs", unit_of_measurement = "$/kW", value = 5000)
                     self.capacity_factor = Parameter(name = "Capacity Factor", unit_of_measurement = "", value = 0.90)       
                     self.Fuel_O_M = Parameter(name = "Fuel and Operation and Maintainance Costs", unit_of_measurement = "$/MWh", value = 30)
                     self.LCOE = Parameter(name = "Levelized Cost Of Electricity", unit_of_measurement = "$/MWh", value = 100)
                 elif(self.region_name == "European Union"):
-                    self.discount_rate=Parameter(name="Discount Rate ",unit_of_measurement="", value=0.08)
-                    self.capital_costs = Parameter(name = "Capital Costs", unit_of_measurement = "$/kW", value = 6600)
+                    self.discount_rate = Parameter(name="Discount Rate ",unit_of_measurement="", value=0.08)
+                    self.overnight_costs = Parameter(name = "Overnight Costs", unit_of_measurement = "$/kW", value = 6600)
                     self.capacity_factor = Parameter(name = "Capacity Factor", unit_of_measurement = "", value = 0.80)       
                     self.Fuel_O_M = Parameter(name = "Fuel and Operation and Maintainance Costs", unit_of_measurement = "$/MWh", value = 35)
                     self.LCOE = Parameter(name = "Levelized Cost Of Electricity", unit_of_measurement = "$/MWh", value = 140)
                 elif(self.region_name == "China"):
-                    self.discount_rate=Parameter(name="Discount Rate ",unit_of_measurement="", value=0.07)
-                    self.capital_costs = Parameter(name = "Capital Costs", unit_of_measurement = "$/kW", value = 2800)
+                    self.discount_rate = Parameter(name="Discount Rate ",unit_of_measurement="", value=0.07)
+                    self.overnight_costs = Parameter(name = "Overnight Costs", unit_of_measurement = "$/kW", value = 2800)
                     self.capacity_factor = Parameter(name = "Capacity Factor", unit_of_measurement = "", value = 0.85)       
                     self.Fuel_O_M = Parameter(name = "Fuel and Operation and Maintainance Costs", unit_of_measurement = "$/MWh", value = 25)
                     self.LCOE = Parameter(name = "Levelized Cost Of Electricity", unit_of_measurement = "$/MWh", value = 65)
                 elif(self.region_name == "India"):
-                    self.discount_rate=Parameter(name="Discount Rate ",unit_of_measurement="", value=0.07)
-                    self.capital_costs = Parameter(name = "Capital Costs", unit_of_measurement = "$/kW", value = 2800)
+                    self.discount_rate = Parameter(name="Discount Rate ",unit_of_measurement="", value=0.07)
+                    self.overnight_costs = Parameter(name = "Overnight Costs", unit_of_measurement = "$/kW", value = 2800)
                     self.capacity_factor = Parameter(name = "Capacity Factor", unit_of_measurement = "", value = 0.75)       
                     self.Fuel_O_M = Parameter(name = "Fuel and Operation and Maintainance Costs", unit_of_measurement = "$/MWh", value = 30)
                     self.LCOE = Parameter(name = "Levelized Cost Of Electricity", unit_of_measurement = "$/MWh", value = 70)
             if(self.year_name == "2030"):
                 if(self.region_name == "United States"):
-                    self.discount_rate=Parameter(name="Discount Rate ",unit_of_measurement="", value=0.08)
-                    self.capital_costs = Parameter(name = "Capital Costs", unit_of_measurement = "$/kW", value = 4800)
+                    self.discount_rate = Parameter(name="Discount Rate ",unit_of_measurement="", value=0.08)
+                    self.overnight_costs = Parameter(name = "Overnight Costs", unit_of_measurement = "$/kW", value = 4800)
                     self.capacity_factor = Parameter(name = "Capacity Factor", unit_of_measurement = "", value = 0.90)       
                     self.Fuel_O_M = Parameter(name = "Fuel and Operation and Maintainance Costs", unit_of_measurement = "$/MWh", value = 30)
                     self.LCOE = Parameter(name = "Levelized Cost Of Electricity", unit_of_measurement = "$/MWh", value = 100)
                 elif(self.region_name == "European Union"):
-                    self.discount_rate=Parameter(name="Discount Rate ",unit_of_measurement="", value=0.08)
-                    self.capital_costs = Parameter(name = "Capital Costs", unit_of_measurement = "$/kW", value = 5100)
+                    self.discount_rate = Parameter(name="Discount Rate ",unit_of_measurement="", value=0.08)
+                    self.overnight_costs = Parameter(name = "Overnight Costs", unit_of_measurement = "$/kW", value = 5100)
                     self.capacity_factor = Parameter(name = "Capacity Factor", unit_of_measurement = "", value = 0.80)       
                     self.Fuel_O_M = Parameter(name = "Fuel and Operation and Maintainance Costs", unit_of_measurement = "$/MWh", value = 35)
                     self.LCOE = Parameter(name = "Levelized Cost Of Electricity", unit_of_measurement = "$/MWh", value = 115)
                 elif(self.region_name == "China"):
-                    self.discount_rate=Parameter(name="Discount Rate ",unit_of_measurement="", value=0.07)
-                    self.capital_costs = Parameter(name = "Capital Costs", unit_of_measurement = "$/kW", value = 2800)
+                    self.discount_rate = Parameter(name="Discount Rate ",unit_of_measurement="", value=0.07)
+                    self.overnight_costs = Parameter(name = "Overnight Costs", unit_of_measurement = "$/kW", value = 2800)
                     self.capacity_factor = Parameter(name = "Capacity Factor", unit_of_measurement = "", value = 0.80)       
                     self.Fuel_O_M = Parameter(name = "Fuel and Operation and Maintainance Costs", unit_of_measurement = "$/MWh", value = 25)
                     self.LCOE = Parameter(name = "Levelized Cost Of Electricity", unit_of_measurement = "$/MWh", value = 65)
                 elif(self.region_name == "India"):
-                    self.discount_rate=Parameter(name="Discount Rate ",unit_of_measurement="", value=0.07)
-                    self.capital_costs = Parameter(name = "Capital Costs", unit_of_measurement = "$/kW", value = 2800)
+                    self.discount_rate = Parameter(name="Discount Rate ",unit_of_measurement="", value=0.07)
+                    self.overnight_costs = Parameter(name = "Overnight Costs", unit_of_measurement = "$/kW", value = 2800)
                     self.capacity_factor = Parameter(name = "Capacity Factor", unit_of_measurement = "", value = 0.85)       
                     self.Fuel_O_M = Parameter(name = "Fuel and Operation and Maintainance Costs", unit_of_measurement = "$/MWh", value = 30)
                     self.LCOE = Parameter(name = "Levelized Cost Of Electricity", unit_of_measurement = "$/MWh", value = 65)
             if(self.year_name == "2050"):
                 if(self.region_name == "United States"):
-                    self.discount_rate=Parameter(name="Discount Rate ",unit_of_measurement="", value=0.08)
-                    self.capital_costs = Parameter(name = "Capital Costs", unit_of_measurement = "$/kW", value = 4500)
+                    self.discount_rate = Parameter(name="Discount Rate ",unit_of_measurement="", value=0.08)
+                    self.overnight_costs = Parameter(name = "Overnight Costs", unit_of_measurement = "$/kW", value = 4500)
                     self.capacity_factor = Parameter(name = "Capacity Factor", unit_of_measurement = "", value = 0.90)       
                     self.Fuel_O_M = Parameter(name = "Fuel and Operation and Maintainance Costs", unit_of_measurement = "$/MWh", value = 30)
                     self.LCOE = Parameter(name = "Levelized Cost Of Electricity", unit_of_measurement = "$/MWh", value = 100)
                 elif(self.region_name == "European Union"):
-                    self.discount_rate=Parameter(name="Discount Rate ",unit_of_measurement="", value=0.08)
-                    self.capital_costs = Parameter(name = "Capital Costs", unit_of_measurement = "$/kW", value = 4500)
+                    self.discount_rate = Parameter(name="Discount Rate ",unit_of_measurement="", value=0.08)
+                    self.overnight_costs = Parameter(name = "Overnight Costs", unit_of_measurement = "$/kW", value = 4500)
                     self.capacity_factor = Parameter(name = "Capacity Factor", unit_of_measurement = "", value = 0.70)       
                     self.Fuel_O_M = Parameter(name = "Fuel and Operation and Maintainance Costs", unit_of_measurement = "$/MWh", value = 35)
                     self.LCOE = Parameter(name = "Levelized Cost Of Electricity", unit_of_measurement = "$/MWh", value = 115)
                 elif(self.region_name == "China"):
-                    self.discount_rate=Parameter(name="Discount Rate ",unit_of_measurement="", value=0.07)
-                    self.capital_costs = Parameter(name = "Capital Costs", unit_of_measurement = "$/kW", value = 2500)
+                    self.discount_rate = Parameter(name="Discount Rate ",unit_of_measurement="", value=0.07)
+                    self.overnight_costs = Parameter(name = "Overnight Costs", unit_of_measurement = "$/kW", value = 2500)
                     self.capacity_factor = Parameter(name = "Capacity Factor", unit_of_measurement = "", value = 0.80)       
                     self.Fuel_O_M = Parameter(name = "Fuel and Operation and Maintainance Costs", unit_of_measurement = "$/MWh", value = 25)
                     self.LCOE = Parameter(name = "Levelized Cost Of Electricity", unit_of_measurement = "$/MWh", value = 60)
                 elif(self.region_name == "India"):
-                    self.discount_rate=Parameter(name="Discount Rate ",unit_of_measurement="", value=0.07)
-                    self.capital_costs = Parameter(name = "Capital Costs", unit_of_measurement = "$/kW", value = 2800)
+                    self.discount_rate = Parameter(name="Discount Rate ",unit_of_measurement="", value=0.07)
+                    self.overnight_costs = Parameter(name = "Overnight Costs", unit_of_measurement = "$/kW", value = 2800)
                     self.capacity_factor = Parameter(name = "Capacity Factor", unit_of_measurement = "", value = 0.90)       
                     self.Fuel_O_M = Parameter(name = "Fuel and Operation and Maintainance Costs", unit_of_measurement = "$/MWh", value = 30)
                     self.LCOE = Parameter(name = "Levelized Cost Of Electricity", unit_of_measurement = "$/MWh", value = 65)
         elif(self.scenario_name == "Stated Policies"):
             if(self.year_name == "2021"):
                 if(self.region_name == "United States"):
-                    self.discount_rate=Parameter(name="Discount Rate ",unit_of_measurement="", value=0.08)
-                    self.capital_costs = Parameter(name = "Capital Costs", unit_of_measurement = "$/kW", value = 5000)
+                    self.discount_rate = Parameter(name="Discount Rate ",unit_of_measurement="", value=0.08)
+                    self.overnight_costs = Parameter(name = "Overnight Costs", unit_of_measurement = "$/kW", value = 5000)
                     self.capacity_factor = Parameter(name = "Capacity Factor", unit_of_measurement = "", value = 0.90)       
                     self.Fuel_O_M = Parameter(name = "Fuel and Operation and Maintainance Costs", unit_of_measurement = "$/MWh", value = 30)
                     self.LCOE = Parameter(name = "Levelized Cost Of Electricity", unit_of_measurement = "$/MWh", value = 105)
                     # IEA report has a discrepancy LCOE in the other scenarios is 100 with the same parameters
                 elif(self.region_name == "European Union"):
-                    self.discount_rate=Parameter(name="Discount Rate ",unit_of_measurement="", value=0.08)
-                    self.capital_costs = Parameter(name = "Capital Costs", unit_of_measurement = "$/kW", value = 6600)
+                    self.discount_rate = Parameter(name="Discount Rate ",unit_of_measurement="", value=0.08)
+                    self.overnight_costs = Parameter(name = "Overnight Costs", unit_of_measurement = "$/kW", value = 6600)
                     self.capacity_factor = Parameter(name = "Capacity Factor", unit_of_measurement = "", value = 0.80)       
                     self.Fuel_O_M = Parameter(name = "Fuel and Operation and Maintainance Costs", unit_of_measurement = "$/MWh", value = 35)
                     self.LCOE = Parameter(name = "Levelized Cost Of Electricity", unit_of_measurement = "$/MWh", value = 140)
                 elif(self.region_name == "China"):
-                    self.discount_rate=Parameter(name="Discount Rate ",unit_of_measurement="", value=0.07)
-                    self.capital_costs = Parameter(name = "Capital Costs", unit_of_measurement = "$/kW", value = 2800)
+                    self.discount_rate = Parameter(name="Discount Rate ",unit_of_measurement="", value=0.07)
+                    self.overnight_costs = Parameter(name = "Overnight Costs", unit_of_measurement = "$/kW", value = 2800)
                     self.capacity_factor = Parameter(name = "Capacity Factor", unit_of_measurement = "", value = 0.80)       
                     self.Fuel_O_M = Parameter(name = "Fuel and Operation and Maintainance Costs", unit_of_measurement = "$/MWh", value = 25)
                     self.LCOE = Parameter(name = "Levelized Cost Of Electricity", unit_of_measurement = "$/MWh", value = 65)
                 elif(self.region_name == "India"):
-                    self.discount_rate=Parameter(name="Discount Rate ",unit_of_measurement="", value=0.07)
-                    self.capital_costs = Parameter(name = "Capital Costs", unit_of_measurement = "$/kW", value = 2800)
+                    self.discount_rate = Parameter(name="Discount Rate ",unit_of_measurement="", value=0.07)
+                    self.overnight_costs = Parameter(name = "Overnight Costs", unit_of_measurement = "$/kW", value = 2800)
                     self.capacity_factor = Parameter(name = "Capacity Factor", unit_of_measurement = "", value = 0.75)       
                     self.Fuel_O_M = Parameter(name = "Fuel and Operation and Maintainance Costs", unit_of_measurement = "$/MWh", value = 30)
                     self.LCOE = Parameter(name = "Levelized Cost Of Electricity", unit_of_measurement = "$/MWh", value = 75)
@@ -593,52 +602,52 @@ class Reactor_Region_LCOE():
             if(self.year_name == "2030"):
                 if(self.region_name == "United States"):
                     self.discount_rate=Parameter(name="Discount Rate ",unit_of_measurement="", value=0.08)
-                    self.capital_costs = Parameter(name = "Capital Costs", unit_of_measurement = "$/kW", value = 4800)
+                    self.overnight_costs = Parameter(name = "Overnight Costs", unit_of_measurement = "$/kW", value = 4800)
                     self.capacity_factor = Parameter(name = "Capacity Factor", unit_of_measurement = "", value = 0.90)       
                     self.Fuel_O_M = Parameter(name = "Fuel and Operation and Maintainance Costs", unit_of_measurement = "$/MWh", value = 30)
                     self.LCOE = Parameter(name = "Levelized Cost Of Electricity", unit_of_measurement = "$/MWh", value = 100)
                 elif(self.region_name == "European Union"):
                     self.discount_rate=Parameter(name="Discount Rate ",unit_of_measurement="", value=0.08)
-                    self.capital_costs = Parameter(name = "Capital Costs", unit_of_measurement = "$/kW", value = 5100)
+                    self.overnight_costs = Parameter(name = "Overnight Costs", unit_of_measurement = "$/kW", value = 5100)
                     self.capacity_factor = Parameter(name = "Capacity Factor", unit_of_measurement = "", value = 0.80)       
                     self.Fuel_O_M = Parameter(name = "Fuel and Operation and Maintainance Costs", unit_of_measurement = "$/MWh", value = 35)
                     self.LCOE = Parameter(name = "Levelized Cost Of Electricity", unit_of_measurement = "$/MWh", value = 120)
                     # IEA report has a discrepancy LCOE in the other scenarios is 115 with the same parameters
                 elif(self.region_name == "China"):
                     self.discount_rate=Parameter(name="Discount Rate ",unit_of_measurement="", value=0.07)
-                    self.capital_costs = Parameter(name = "Capital Costs", unit_of_measurement = "$/kW", value = 2800)
+                    self.overnight_costs = Parameter(name = "Overnight Costs", unit_of_measurement = "$/kW", value = 2800)
                     self.capacity_factor = Parameter(name = "Capacity Factor", unit_of_measurement = "", value = 0.80)       
                     self.Fuel_O_M = Parameter(name = "Fuel and Operation and Maintainance Costs", unit_of_measurement = "$/MWh", value = 25)
                     self.LCOE = Parameter(name = "Levelized Cost Of Electricity", unit_of_measurement = "$/MWh", value = 65)
                 elif(self.region_name == "India"):
                     self.discount_rate=Parameter(name="Discount Rate ",unit_of_measurement="", value=0.07)
-                    self.capital_costs = Parameter(name = "Capital Costs", unit_of_measurement = "$/kW", value = 2800)
+                    self.overnight_costs = Parameter(name = "Overnight Costs", unit_of_measurement = "$/kW", value = 2800)
                     self.capacity_factor = Parameter(name = "Capacity Factor", unit_of_measurement = "", value = 0.85)       
                     self.Fuel_O_M = Parameter(name = "Fuel and Operation and Maintainance Costs", unit_of_measurement = "$/MWh", value = 30)
                     self.LCOE = Parameter(name = "Levelized Cost Of Electricity", unit_of_measurement = "$/MWh", value = 65)
             if(self.year_name == "2050"):
                 if(self.region_name == "United States"):
                     self.discount_rate=Parameter(name="Discount Rate ",unit_of_measurement="", value=0.08)
-                    self.capital_costs = Parameter(name = "Capital Costs", unit_of_measurement = "$/kW", value = 4500)
+                    self.overnight_costs = Parameter(name = "Overnight Costs", unit_of_measurement = "$/kW", value = 4500)
                     self.capacity_factor = Parameter(name = "Capacity Factor", unit_of_measurement = "", value = 0.90)       
                     self.Fuel_O_M = Parameter(name = "Fuel and Operation and Maintainance Costs", unit_of_measurement = "$/MWh", value = 30)
                     self.LCOE = Parameter(name = "Levelized Cost Of Electricity", unit_of_measurement = "$/MWh", value = 95)
                     # IEA report has a discrepancy LCOE in the Announced Pledges Scenario is 100 with the same parameters
                 elif(self.region_name == "European Union"):
                     self.discount_rate=Parameter(name="Discount Rate ",unit_of_measurement="", value=0.08)
-                    self.capital_costs = Parameter(name = "Capital Costs", unit_of_measurement = "$/kW", value = 4500)
+                    self.overnight_costs = Parameter(name = "Overnight Costs", unit_of_measurement = "$/kW", value = 4500)
                     self.capacity_factor = Parameter(name = "Capacity Factor", unit_of_measurement = "", value = 0.80)       
                     self.Fuel_O_M = Parameter(name = "Fuel and Operation and Maintainance Costs", unit_of_measurement = "$/MWh", value = 35)
                     self.LCOE = Parameter(name = "Levelized Cost Of Electricity", unit_of_measurement = "$/MWh", value = 105)
                 elif(self.region_name == "China"):
                     self.discount_rate=Parameter(name="Discount Rate ",unit_of_measurement="", value=0.07)
-                    self.capital_costs = Parameter(name = "Capital Costs", unit_of_measurement = "$/kW", value = 2500)
+                    self.overnight_costs = Parameter(name = "Overnight Costs", unit_of_measurement = "$/kW", value = 2500)
                     self.capacity_factor = Parameter(name = "Capacity Factor", unit_of_measurement = "", value = 0.80)       
                     self.Fuel_O_M = Parameter(name = "Fuel and Operation and Maintainance Costs", unit_of_measurement = "$/MWh", value = 25)
                     self.LCOE = Parameter(name = "Levelized Cost Of Electricity", unit_of_measurement = "$/MWh", value = 60)
                 elif(self.region_name == "India"):
                     self.discount_rate=Parameter(name="Discount Rate ",unit_of_measurement="", value=0.07)
-                    self.capital_costs = Parameter(name = "Capital Costs", unit_of_measurement = "$/kW", value = 2800)
+                    self.overnight_costs = Parameter(name = "Overnight Costs", unit_of_measurement = "$/kW", value = 2800)
                     self.capacity_factor = Parameter(name = "Capacity Factor", unit_of_measurement = "", value = 0.90)       
                     self.Fuel_O_M = Parameter(name = "Fuel and Operation and Maintainance Costs", unit_of_measurement = "$/MWh", value = 30)
                     self.LCOE = Parameter(name = "Levelized Cost Of Electricity", unit_of_measurement = "$/MWh", value = 65)
