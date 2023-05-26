@@ -1,4 +1,4 @@
-## this is a tool for calculate LCOE of a nuclear power reactor (large and commercial)
+## this is a tool to calculate LCOE of a nuclear power reactor (large and commercial)
 ## there are various options: default parameters, customized parameters, defualt design, default scenario/region/year
 
 ## sources:
