@@ -11,16 +11,17 @@
 ##   [6] OECD NEA Unlocking Reductions in the Construction Costs of Nuclear (2020): https://doi.org/10.1787/33ba86e1-en
 ##   [7] Lucid Catalyst con Energy Technology Institute: Nuclear Cost Divers Project (2020): https://www.lucidcatalyst.com/eti-nuclear-cost-drivers-full
 
-## to be added: 
-##   1. controls on inputs
-##   2. MWh input
-##   3. possibility to come back
-##   4. Reactor() class formatting and possibility to edit for regional default parameters
-##   5. total cost for reactor, learning curve
-##   6. LTO
-##   7. multiple option calculator (like same parameters but 3 different discount rate)
-##   8. crete table and charts
-##   9. other technology
+## to be added:
+##   1. jupyter notebook application
+##   2. controls on inputs
+##   3. MWh input
+##   4. possibility to come back
+##   5. Reactor() class formatting and possibility to edit for regional default parameters
+##   6. total cost for reactor, learning curve
+##   7. LTO
+##   8. multiple option calculator (like same parameters but 3 different discount rate)
+##   9. crete table and charts
+##   10. other technology
 
 # import libraries
 import string
@@ -402,8 +403,7 @@ class Reactor_Region(Reactor):
         pass
 """
 
-
-# sub class of Reactor for use default scenario/region/year
+# Class for use default scenario/region/year reactor
 # data from [3] but using the LCOE already calulated by IEA
 # @var regionn_name (string) the name of the region
 class Reactor_Region_LCOE():
@@ -692,19 +692,21 @@ def main():
     print_list(what_to_do)
     customization = int(input(f"Digit the associated number and press Enter: "))
     print("")
+    
     # editing of parameters
     edit = False
-    if(customization == 3):
+    if(customization == 3): # customize all the parameters
         new_reactor = new_reactor.edit_parameter(edit_all = True)
-    elif(customization == 4):
+    elif(customization == 4): # default design
         new_reactor = new_reactor.default_design()
         edit = yes_no_input(input(f"Do you want to edit some parameters? [y/n]: "))
-    elif(customization == 5):
+    elif(customization == 5): # default region
         new_reactor = new_reactor.default_region_LCOE()
-    if(customization == 2 or edit):
+    if(customization == 2 or edit): # edit some parameters
         new_reactor = new_reactor.edit_parameter() 
+        
+    # print final parameters and LCOE
     if(not customization == 5):
-        # print final parameters and LCOE
         what_customization = ["default reactor", "customizated reactor", "totally customizated reactor", 
                               "{new_reactor.design_name} design", "{new_reactor.region_name} region"]
         print(f"\nFinal values for {what_customization[customization-1]}: ")
