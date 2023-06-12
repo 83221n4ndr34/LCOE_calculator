@@ -1,0 +1,297 @@
+# IEA assume for nuclear power a standard WACC of 7-8% based on the stage of economic development
+# information from [IEA Net Zero by 2050, A Roadmap for the Global Energy Sector (2021): https://iea.blob.core.windows.net/assets/deebef5d-0c34-4539-9d0c-10b13d840027/NetZeroby2050-ARoadmapfortheGlobalEnergySector_CORR.pdf#page=202]
+# are used for attribute 0.08 to US and EU, 0.07 to CN and IN
+# some LCOE in the Stated Policies scenario apparently have discrepancies from those calculated in other scenarios with the same assumptions
+
+- scenario: "Net Zero by 2050"
+  year : "2021"
+  region : "United States"
+  discount_rate : 0.08
+  overnight_costs : 5000
+  capacity_factor : 0.90       
+  Fuel_O_M : 30
+  LCOE : 100
+- scenario: "Net Zero by 2050"
+  year : "2021"
+  region : "European Union"
+  discount_rate : 0.08
+  overnight_costs : 6600
+  capacity_factor : 0.80       
+  Fuel_O_M : 35
+  LCOE : 140
+- scenario: "Net Zero by 2050"
+  year : "2021"
+  region : "China"
+  discount_rate : 0.07
+  overnight_costs : 2800
+  capacity_factor : 0.85       
+  Fuel_O_M : 25
+  LCOE : 65
+- scenario: "Net Zero by 2050"
+  year : "2021"
+  region : "India"
+  discount_rate : 0.07
+  overnight_costs : 2800
+  capacity_factor : 0.70       
+  Fuel_O_M : 30
+  LCOE : 75
+- scenario: "Net Zero by 2050"
+  year : "2030"
+  region : "United States"
+  discount_rate : 0.08
+  overnight_costs : 4800
+  capacity_factor : 0.90       
+  Fuel_O_M : 30
+  LCOE : 100
+- scenario: "Net Zero by 2050"
+  year : "2030"
+  region : "European Union"
+  discount_rate : 0.08
+  overnight_costs : 5100
+  capacity_factor : 0.80       
+  Fuel_O_M : 35
+  LCOE : 115
+- scenario: "Net Zero by 2050"
+  year : "2030"
+  region : "China"
+  discount_rate : 0.07
+  overnight_costs : 2800
+  capacity_factor : 0.80       
+  Fuel_O_M : 25
+  LCOE : 65
+- scenario: "Net Zero by 2050"
+  year : "2030"
+  region : "India"
+  discount_rate : 0.07
+  overnight_costs : 2800
+  capacity_factor : 0.85       
+  Fuel_O_M : 30
+  LCOE : 65
+- scenario: "Net Zero by 2050"
+  year : "2050"
+  region : "United States"
+  discount_rate : 0.08
+  overnight_costs : 4500
+  capacity_factor : 0.85       
+  Fuel_O_M : 30
+  LCOE : 100
+- scenario: "Net Zero by 2050"
+  year : "2050"
+  region : "European Union"
+  discount_rate : 0.08
+  overnight_costs : 4500
+  capacity_factor : 0.70       
+  Fuel_O_M : 35
+  LCOE : 115
+- scenario: "Net Zero by 2050"
+  year : "2050"
+  region : "China"
+  discount_rate : 0.07
+  overnight_costs : 2500
+  capacity_factor : 0.70       
+  Fuel_O_M : 25
+  LCOE : 65
+- scenario: "Net Zero by 2050"
+  year : "2050"
+  region : "India"
+  discount_rate : 0.07
+  overnight_costs : 2800
+  capacity_factor : 0.90       
+  Fuel_O_M : 30
+  LCOE : 65
+- scenario: "Announced Pledges"
+  year : "2021"
+  region : "United States"
+  discount_rate : 0.08
+  overnight_costs : 5000
+  capacity_factor : 0.90       
+  Fuel_O_M : 30
+  LCOE : 100
+- scenario: "Announced Pledges"
+  year : "2021"
+  region : "European Union"
+  discount_rate : 0.08
+  overnight_costs : 6600
+  capacity_factor : 0.80       
+  Fuel_O_M : 35
+  LCOE : 140
+- scenario: "Announced Pledges"
+  year : "2021"
+  region : "China"
+  discount_rate : 0.07
+  overnight_costs : 2800
+  capacity_factor : 0.85       
+  Fuel_O_M : 25
+  LCOE : 65
+- scenario: "Announced Pledges"
+  year : "2021"
+  region : "India"
+  discount_rate : 0.07
+  overnight_costs : 2800
+  capacity_factor : 0.75       
+  Fuel_O_M : 30
+  LCOE : 70
+- scenario: "Announced Pledges"
+  year : "2030"
+  region : "United States"
+  discount_rate : 0.08
+  overnight_costs : 4800
+  capacity_factor : 0.90       
+  Fuel_O_M : 30
+  LCOE : 100
+- scenario: "Announced Pledges"
+  year : "2030"
+  region : "European Union"
+  discount_rate : 0.08
+  overnight_costs : 5100
+  capacity_factor : 0.80       
+  Fuel_O_M : 35
+  LCOE : 115
+- scenario: "Announced Pledges"
+  year : "2030"
+  region : "China"
+  discount_rate : 0.07
+  overnight_costs : 2800
+  capacity_factor : 0.80       
+  Fuel_O_M : 25
+  LCOE : 65
+- scenario: "Announced Pledges"
+  year : "2030"
+  region : "India"
+  discount_rate : 0.07
+  overnight_costs : 2800
+  capacity_factor : 0.85       
+  Fuel_O_M : 30
+  LCOE : 65
+- scenario: "Announced Pledges"
+  year : "2050"
+  region : "United States"
+  discount_rate : 0.08
+  overnight_costs : 4500
+  capacity_factor : 0.90       
+  Fuel_O_M : 30
+  LCOE : 100
+- scenario: "Announced Pledges"
+  year : "2050"
+  region : "European Union"
+  discount_rate : 0.08
+  overnight_costs : 4500
+  capacity_factor : 0.70       
+  Fuel_O_M : 35
+  LCOE : 115
+- scenario: "Announced Pledges"
+  year : "2050"
+  region : "China"
+  discount_rate : 0.07
+  overnight_costs : 2500
+  capacity_factor : 0.80       
+  Fuel_O_M : 25
+  LCOE : 60
+- scenario: "Announced Pledges"
+  year : "2050"
+  region : "India"
+  discount_rate : 0.07
+  overnight_costs : 2800
+  capacity_factor : 0.90       
+  Fuel_O_M : 30
+  LCOE : 65
+- scenario: "Stated Policies"
+  year : "2021"
+  region : "United States"
+  discount_rate : 0.08
+  overnight_costs : 5000
+  capacity_factor : 0.90       
+  Fuel_O_M : 30
+  LCOE : 105
+# IEA report has a discrepancy LCOE in the other scenarios is 100 with the same parameters
+- scenario: "Stated Policies"
+  year : "2021"
+  region : "European Union"
+  discount_rate : 0.08
+  overnight_costs : 6600
+  capacity_factor : 0.80       
+  Fuel_O_M : 35
+  LCOE : 140
+- scenario: "Stated Policies"
+  year : "2021"
+  region : "China"
+  discount_rate : 0.07
+  overnight_costs : 2800
+  capacity_factor : 0.80       
+  Fuel_O_M : 25
+  LCOE : 65
+- scenario: "Stated Policies"
+  year : "2021"
+  region : "India"
+  discount_rate : 0.07
+  overnight_costs : 2800
+  capacity_factor : 0.75       
+  Fuel_O_M : 30
+  LCOE : 75
+# IEA report has a discrepancy LCOE in the other scenarios is 70 with the same parameters
+- scenario: "Stated Policies"
+  year : "2030"
+  region : "United States"
+  discount_rate : 0.08
+  overnight_costs : 4800
+  capacity_factor : 0.90       
+  Fuel_O_M : 30
+  LCOE : 100
+- scenario: "Stated Policies"
+  year : "2030"
+  region : "European Union"
+  discount_rate : 0.08
+  overnight_costs : 5100
+  capacity_factor : 0.80       
+  Fuel_O_M : 35
+  LCOE : 120
+# IEA report has a discrepancy LCOE in the other scenarios is 115 with the same parameters
+- scenario: "Stated Policies"
+  year : "2030"
+  region : "China"
+  discount_rate : 0.07
+  overnight_costs : 2800
+  capacity_factor : 0.80       
+  Fuel_O_M : 25
+  LCOE : 65
+- scenario: "Stated Policies"
+  year : "2030"
+  region : "India"
+  discount_rate : 0.07
+  overnight_costs : 2800
+  capacity_factor : 0.85       
+  Fuel_O_M : 30
+  LCOE : 65
+- scenario: "Stated Policies"
+  year : "2050"
+  region : "United States"
+  discount_rate : 0.08
+  overnight_costs : 4500
+  capacity_factor : 0.90       
+  Fuel_O_M : 30
+  LCOE : 95
+# IEA report has a discrepancy LCOE in the Announced Pledges Scenario is 100 with the same parameters
+- scenario: "Stated Policies"
+  year : "2050"
+  region : "European Union"
+  discount_rate : 0.08
+  overnight_costs : 4500
+  capacity_factor : 0.80       
+  Fuel_O_M : 35
+  LCOE : 105
+- scenario: "Stated Policies"
+  year : "2050"
+  region : "China"
+  discount_rate : 0.07
+  overnight_costs : 2500
+  capacity_factor : 0.80       
+  Fuel_O_M : 25
+  LCOE : 60
+- scenario: "Stated Policies"
+  year : "2050"
+  region : "India"
+  discount_rate : 0.07
+  overnight_costs : 2800
+  capacity_factor : 0.90       
+  Fuel_O_M : 30
+  LCOE : 65
